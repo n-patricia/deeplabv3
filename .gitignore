@@ -1,0 +1,16 @@
+.DS_Store
+.DS_Store?
+._*
+.Trashes
+*pycache*
+
+# Compiled
+*.py~
+*.pyc
+*.jpg
+
+# Pretrained models
+*.pth
+
+# Log
+*.log
