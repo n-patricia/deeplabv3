@@ -17,13 +17,12 @@ from utils.summaries import TensorboardSummary
 from utils.metrics import Evaluator
 
 
-import pdb
 
 
 class Trainer(object):
     def __init__(self, args):
         self.args = args
-        pdb.set_trace()
+
         # Define Saver
         self.saver = Saver(args)
         self.saver.save_experiment_config()
@@ -36,7 +35,7 @@ class Trainer(object):
         self.train_loader, self.val_loader, self.test_loader, self.num_class = make_data_loader(args, **kwargs)
 
         # Define network
-        model = DeepLab(num_classes=self.num_class,
+        model = DeepLab(num_class=self.num_class,
                         backbone=args.backbone,
                         output_stride=args.out_stride,
                         sync_bn=args.sync_bn,
@@ -95,8 +94,8 @@ class Trainer(object):
 
     def training(self, epoch):
         train_loss = 0.0
-        pdb.set_trace()
         self.model.train()
+
         tbar = tqdm(self.train_loader)
         num_img_tr = len(self.train_loader)
         for i, sample in enumerate(tbar):
@@ -230,8 +229,8 @@ def main():
     parser.add_argument("--eval-interval", type=int, default=1, help="evaluation interval (default: 1)")
     parser.add_argument("--no-val", action="store_true", default=False, help="skip validation during training")
 
-    pdb.set_trace()
     args = parser.parse_args()
+    args.dataset_dir = "/Users/nopz/Google Drive/voc/VOCdevkit/VOC2012"
     args.cuda = not args.no_cuda and torch.cuda.is_available()
     if args.cuda:
         try:
@@ -281,6 +280,5 @@ def main():
 
     trainer.writer.close()
 
-# if __name__ == "__main__":
-
-main()
+if __name__ == "__main__":
+    main()

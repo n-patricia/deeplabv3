@@ -3,12 +3,12 @@ import shutil
 import torch
 from collections import OrderedDict
 import glob
-import pdb
+
+
 class Saver(object):
 
     def __init__(self, args):
         self.args = args
-        pdb.set_trace()
         self.directory = os.path.join(args.checkdir, args.dataset_name, args.checkname)
         self.runs = sorted(glob.glob(os.path.join(self.directory, "experiment_*")))
         run_id = int(self.runs[-1].split('_')[-1]) + 1 if self.runs else 0
