@@ -9,6 +9,7 @@ import torch.utils.data as data
 import torchvision.transforms as transforms
 import dataloaders.custom_transforms as tf
 
+
 class VOCSegmentation(data.Dataset):
     NUM_CLASS = 21
 
@@ -103,7 +104,7 @@ if __name__=="__main__":
     args = parser.parse_args()
     args.base_size = 513
     args.crop_size = 513
-    args.dataset = "pascal"
+    args.dataset_name = "pascal"
 
     voc_train = VOCSegmentation(args, split="train")
     dl = data.DataLoader(voc_train, batch_size=5, shuffle=True, num_workers=0)
