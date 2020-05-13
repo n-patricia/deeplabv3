@@ -2,7 +2,7 @@ from dataloaders.datasets import pascal
 import torch.utils.data as data
 
 def make_data_loader(args, **kwargs):
-    if args.dataset == "pascal":
+    if args.dataset_name == "pascal":
         train_set = pascal.VOCSegmentation(args, base_dir=args.dataset_dir, split="train")
         val_set = pascal.VOCSegmentation(args, base_dir=args.dataset_dir, split="val")
 
