@@ -3,6 +3,8 @@
 ._*
 .Trashes
 *pycache*
+checkpoints
+
 
 # Compiled
 *.py~
