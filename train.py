@@ -16,7 +16,7 @@ from utils.saver import Saver
 from utils.summaries import TensorboardSummary
 from utils.metrics import Evaluator
 
-
+import pdb
 
 
 class Trainer(object):
@@ -54,7 +54,7 @@ class Trainer(object):
             if os.path.isfile(classes_weights_path):
                 weight = np.load(classes_weights_path)
             else:
-                weight = calculate_weights_labels(args.dataset_name, self.train_loader, self.num_class)
+                weight = calculate_weights_labels(args.dataset_name, args.dataset_dir, self.train_loader, self.num_class)
             weight = torch.from_numpy(weight.astype(np.float32))
         else:
             weight = None
@@ -95,7 +95,7 @@ class Trainer(object):
     def training(self, epoch):
         train_loss = 0.0
         self.model.train()
-
+        pdb.set_trace()
         tbar = tqdm(self.train_loader)
         num_img_tr = len(self.train_loader)
         for i, sample in enumerate(tbar):
@@ -118,8 +118,8 @@ class Trainer(object):
                 self.summary.visualize_image(self.writer, self.args.dataset_name, image, target, output, global_step)
 
         self.writer.add_scalar('train/total_loss_epoch', train_loss, epoch)
-        print('[Epoch: %d, numImages: %5d]' % (epoch, i * (self.args.batch_size + image.data.shape[0])))
-        print('Loss: %.3f' % train_loss)
+        print('[epoch: %d, numImages: %5d]' % (epoch, i * (self.args.batch_size + image.data.shape[0])))
+        print('loss: %.3f' % train_loss)
 
         if self.args.no_val:
             # save checkpoint every epoch
@@ -265,7 +265,7 @@ def main():
         }
         args.lr = lrs[args.dataset_name.lower()] / (4 * len(args.gpu_ids)) * args.batch_size
 
-
+    pdb.set_trace()
     if args.checkname is None:
         args.checkname = "deeplab-"+str(args.backbone)
     print(args)
