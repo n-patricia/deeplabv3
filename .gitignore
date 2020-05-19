@@ -3,8 +3,8 @@
 ._*
 .Trashes
 *pycache*
-checkpoints
-
+checkpoints/
+pretrained/
 
 # Compiled
 *.py~
@@ -12,6 +12,7 @@ checkpoints
 *.jpg
 
 # Pretrained models
+pretrained/
 *.pth
 
 # Log

@@ -1,13 +1,23 @@
 #
+# https://github.com/jfzhang95/pytorch-deeplab-xception.git
 #
 
 import math
 
 import torch
 import torch.nn as nn
-import torch.utils.model_zoo as model_zoo
+from torch.utils import model_zoo as model_zoo
 
 from models.sync_batchnorm.batchnorm import SynchronizedBatchNorm2d
+
+
+
+model_urls = {
+    'resnet50': 'https://download.pytorch.org/models/resnet50-19c8e357.pth',
+    'resnet101': 'https://download.pytorch.org/models/resnet101-5d3b4d8f.pth',
+    'resnet152': 'https://download.pytorch.org/models/resnet152-b121ed2d.pth',
+}
+
 
 class Bottleneck(nn.Module):
     expansion = 4
@@ -45,6 +55,7 @@ class Bottleneck(nn.Module):
 
         return out
 
+
 class ResNet(nn.Module):
     def __init__(self, block, layers, output_stride, batch_norm, pretrained=True):
         super(ResNet, self).__init__()
@@ -59,6 +70,7 @@ class ResNet(nn.Module):
         else:
             raise NotImplementedError
 
+        self.dilation = 1
         self.conv1 = nn.Conv2d(3, 64, kernel_size=7, stride=2, padding=3, bias=False)
         self.bn1 = batch_norm(64)
         self.relu = nn.ReLU(inplace=True)
@@ -67,11 +79,15 @@ class ResNet(nn.Module):
         self.layer1 = self._make_layer(block, 64, layers[0], stride=strides[0], dilation=dilations[0], batch_norm=batch_norm)
         self.layer2 = self._make_layer(block, 128, layers[1], stride=strides[1], dilation=dilations[1], batch_norm=batch_norm)
         self.layer3 = self._make_layer(block, 256, layers[2], stride=strides[2], dilation=dilations[2], batch_norm=batch_norm)
-        self.layer4 = self._make_MG_layer(block, 512, blocks=blocks, stride=strides[3], dilation=dilations[3], batch_norm=batch_norm)
+        self.layer4 = self._make_layer(block, 512, layers[3], stride=strides[3], dilation=dilations[3], batch_norm=batch_norm)
+        # self.layer4 = self._make_MG_layer(block, 512, blocks=blocks, stride=strides[3], dilation=dilations[3], batch_norm=batch_norm)
+
+        # self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
+
         self._init_weight()
-        print(self)
-        if pretrained:
-            self._load_pretrained_model()
+        # print(self)
+        # if pretrained:
+        #     self._load_pretrained_model()
 
     def forward(self, x):
         out = self.relu(self.bn1(self.conv1(x)))
@@ -82,10 +98,12 @@ class ResNet(nn.Module):
         out = self.layer2(out)
         out = self.layer3(out)
         out = self.layer4(out)
+
         return out, low_level_features
 
     def _make_layer(self, block, planes, blocks, stride=1, dilation=1, batch_norm=None):
         downsample = None
+        previous_dilation = self.dilation
         if stride != 1 or self.inplanes != planes * block.expansion:
             downsample = nn.Sequential(
                 nn.Conv2d(self.inplanes, planes * block.expansion, kernel_size=1, stride=stride, bias=False),
@@ -93,10 +111,11 @@ class ResNet(nn.Module):
             )
 
         layers = []
-        layers.append(block(self.inplanes, planes, stride, dilation, downsample, batch_norm))
+        layers.append(block(self.inplanes, planes, stride, previous_dilation, downsample, batch_norm))
         self.inplanes = planes * block.expansion
         for i in range(1, blocks):
-            layers.append(block(self.inplanes, planes, dilation=dilation, batch_norm=batch_norm))
+            layers.append(block(self.inplanes, planes, stride, dilation=dilation, batch_norm=batch_norm))
+            self.dilation = dilation
 
         return nn.Sequential(*layers)
 
@@ -128,24 +147,54 @@ class ResNet(nn.Module):
                 m.weight.data.fill_(1)
                 m.bias.data.zero_()
 
-    def _load_pretrained_model(self):
-        pretrain_dict = model_zoo.load_url('https://download.pytorch.org/models/resnet101-5d3b4d8f.pth')
-        model_dict = {}
-        state_dict = self.state_dict()
-        # print(state_dict.keys())
+    # def _load_pretrained_model(self):
+    #     pretrain_dict = model_zoo.load_url('https://download.pytorch.org/models/resnet101-5d3b4d8f.pth')
+    #     model_dict = {}
+    #     state_dict = self.state_dict()
+    #     # print(state_dict.keys())
+    #
+    #     for k, v in pretrain_dict.items():
+    #         if k in state_dict:
+    #             model_dict[k] = v
+    #     state_dict.update(model_dict)
+    #     self.load_state_dict(state_dict)
 
-        for k, v in pretrain_dict.items():
-            if k in state_dict:
-                model_dict[k] = v
-        state_dict.update(model_dict)
-        self.load_state_dict(state_dict)
+
+def _load_state_dict_from_url(arch, model):
+    pretrain_dict = model_zoo.load_url(model_urls[arch])
+    model_dict = {}
+    state_dict = model.state_dict()
+
+    for k, v in pretrain_dict.items():
+        if k in state_dict:
+            model_dict[k] = v
+    state_dict.update(model_dict)
+    model.load_state_dict(state_dict)
+    return model
+
+
+def _resnet(arch, block, layers, output_stride, batch_norm, pretrained):
+    model = ResNet(block, layers, output_stride, batch_norm, pretrained)
+    if pretrained:
+        model = _load_state_dict_from_url(arch, model)
+    return model
+
+
+def ResNet50(output_stride, batch_norm, pretrained=True):
+    """Constructs a ResNet-50 model.
+    Args:
+        pretrained (bool): If True, returns a model pre-trained on ImageNet
+    """
+    model = _resnet("resnet50", Bottleneck, [3, 4, 6, 3], output_stride, batch_norm, pretrained)
+    return model
+
 
 def ResNet101(output_stride, batch_norm, pretrained=True):
     """Constructs a ResNet-101 model.
     Args:
         pretrained (bool): If True, returns a model pre-trained on ImageNet
     """
-    model = ResNet(Bottleneck, [3, 4, 23, 3], output_stride, batch_norm, pretrained)
+    model = _resnet("resnet101", Bottleneck, [3, 4, 23, 3], output_stride, batch_norm, pretrained)
     return model
 
 
