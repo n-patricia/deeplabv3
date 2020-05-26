@@ -12,7 +12,7 @@ def decode_seg_map_structure(label_masks, dataset="pascal"):
     return rgb_masks
 
 
-def decode_segmap(label_mask, dataset):
+def decode_segmap(label_mask, dataset_name):
     """Decode segmentation class labels into  a color image
     Args:
         label_mask (np.ndarray): an (M,N) array of integer values denoting
@@ -22,7 +22,7 @@ def decode_segmap(label_mask, dataset):
     Returns:
         (np.ndarray, optional): the resulting decoded color image.
     """
-    if dataset == "pascal" or dataset == "coco":
+    if dataset_name == "pascal" or dataset_name == "coco":
         n_class = 21
         label_colours = get_pascal_labels()
     else:
