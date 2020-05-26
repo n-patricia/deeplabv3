@@ -19,6 +19,7 @@ import dataloaders.custom_transforms as tf
 
 
 class COCOSegmentation(data.Dataset):
+    NUM_CLASS = 21
     CAT_LIST = [0, 5, 2, 16, 9, 44, 6, 3, 17, 62, 21, 67, 18, 19, 4, 1, 64, 20, 63, 7, 72]
 
     def __init__(self, args, base_dir="./", split="train", year="2017"):
@@ -122,6 +123,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     args = parser.parse_args()
+    args.base_dir = "/Volumes/CYRED/Google Drive/coco"
     args.base_size = 513
     args.crop_size = 513
 
